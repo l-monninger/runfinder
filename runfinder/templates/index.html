@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Runfinder</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js" integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg==" crossorigin=""></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet-search@2.3.7/dist/leaflet-search.src.css" />
+        <script src="https://unpkg.com/leaflet-search@2.3.7/dist/leaflet-search.src.js"></script>
+        <script src='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js'></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="{{ url_for('static', filename="style.css")}}"/>
+        <script src="{{ url_for('static', filename="methods.js")}}" defer></script>
+        <python id="pyapp" data-app-directory= "{{ request.script_root|tojson|safe }}"> </python>
+    </head>
+    <body>
+        <header>
+            <h1 id="title">Runfinder</h1>
+        </header>
+        <div>
+            <hr class="divider">
+            <div id="settings">
+                <h2 id=settings_>Settings &#9881;</h2>
+                <h3 id=swath_parameters>Run-swath Parameters</h3>
+                <div class="setting">
+                    <label for="global_downhill">How downhill would you like your run-swath to be on the whole?</label>
+                    <span>Uphill sections are good with me.</span><input type="range" min="0" max="1000" value="500" class="slider" id="global_downhill"><span>Get me down the mountain.</span>
+                </div>
+                <div class="setting">
+                    <label for="downhill_reducer">How fast would you like to get downhill?</label>
+                    <span>Keep it chill.</span><input type="range" min="0" max="1000" value="500" class="slider" id="downhill_reducer"><span>See above, my friend.</span>
+                </div>
+                <div class="setting">
+                    <label for="local_downhill">How downhill would you like your run-swath to be locally?</label>
+                    <span>Life's for ups and downs.</span><input type="range" min="0" max="1000" value="500" class="slider" id="local_downhill"><span>All downhill, all the time.</span>
+                </div>
+                <div class="setting">
+                    <label for="max_slope">What's the steepest terrain you'd want to deal with?</label>
+                    <span>Keep me on the bunnyhill. (1 DD) </span><input type="range" min="0" max="1000" value="500" class="slider" id="max_slope"> <span>I can fly. (90 DD)</span>
+                </div>
+                <div class="setting">
+                    <label for="slope_like">How much would you like the slope to change from section to section?</label>
+                    <span>Hold it steady.</span><input type="range" min="0" max="1000" value="500" class="slider" id="slope_like"><span>Spice is nice.</span>
+                </div>
+                <h3 id="best_run_parameters">Best Run Parameters</h3>
+                <div class="setting">
+                    <span>Flowy</span><input type="range" min="0" max="1" value="0" class="slider toggle" id="flowy"><span>Gnarly</span>
+                </div>
+                <div class="setting">
+                    <span>Windy</span><input type="range" min="0" max="1" value="0" class="slider toggle" id="windy"><span>Direct</span>
+                </div>
+                <div class="setting">
+                    <label for="type_weight">"I care more about the..."</label>
+                    <span>Flow/Gnar</span><input type="range" min="0" max="1000" value="500" class="slider" id="type_weight"><span>Length of the Run</span>
+                </div>
+                <div class="setting">
+                    <label for="steepness_weight">"I'd like the best run to be on the..."</label>
+                    <span>Gentler Side</span><input type="range" min="0" max="1000" value="500" class="slider" id="steepness_weight"><span>Steeper Side</span>
+                </div>
+            </div>
+            <hr class="divider">
+            <h2 id="search_location">Search Location</h2>
+            <div id="map_div">
+                <div id="progress">
+                    <p>
+                        <span id="request_status">You have not made a request yet...</span>
+                    </p>
+                </div>
+                <div id="map"></div>
+                <a id="resource_path" href=""><input type="button" value="Download" id="download"></a>
+                <input type="button" value="Reset" id="reset" onclick="reset()">
+                <input type="button" value="Invalid Bounds or Marker" id="request_submit">
+            </div>
+        </div>
+    </body>
+</html>
