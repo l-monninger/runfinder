@@ -182,7 +182,7 @@ class DEM:
     the core recursive algorithm for Run Finder; finds a swath of pixels which represents a good run
 
     @param pixels is the set of good pixels; initially this will only be the start pixel; this parameter changes over the recursion
-    @run_set is the set of good pixels, representing the swath; this parameter changes over the recursion
+    @param run_set is the set of good pixels, representing the swath; this parameter changes over the recursion
     @param k is the the constant by which the absolute maximum elevation will be determined; this parameter changes over the recursion
     @param R is the constant by which the relative maximum elevation will be determined; this parameter remains constant over the recursion
     @param max_elev is the absolute maximum elevation which will be applied at the relevant step of recursion; this parameter changes over the recursion
@@ -204,12 +204,40 @@ class DEM:
         except: # ends the function and returns false
             return False
 
+        while len(pixels) > 0:
+            new_value = list(pixels)[0].value + 1 # determine the value that will be used to set the raster
+
+            # initialize the sets to which we'll add
+            good_neighbors = set()
+            good_neighbors_elev = set() # this is for determining rel_max_elev
+            
+            for pixel in pixels: # for each pixel in the set of pixels
+                neighbors = pixel.neighborsAsPixels(new_value) # get all the pixel's neighbors
+                value_p = self.gdalarray[pixel.y, pixel.x] # get the elevation value of the pixel
+                value_p_s = self.gdalarray_slope[pixel.y, pixel.x] # get the slope value of the pixel
+                for neighbor in neighbors: # for each neighbor of each pixel
+                    value_n = self.gdalarray[neighbor.y, neighbor.x] # get the elevation value of the neighbor
+                    value_n_s = self.gdalarray_slope[neighbor.y, neighbor.x] # get the slope value of the neighbor
+                    if (value_n < value_p) & (value_n < max_elev) & (abs(value_p_s - value_n_s) < SLOPE_LIKE) & (value_n_s < MAX_SLOPE) & (neighbor not in run_set): # if the pixel matches all criteria
+                        good_neighbors.add(neighbor) # add it to the set of good neighbors
+                        run_set.add(neighbor) # add it to the run_set
+                        good_neighbors_elev.add(value_n) # add it  to the elevation set
+
+            max_elev = (k**(len(good_neighbors)/MAX_ELEV_DROP_REDUCER)) * max_elev # drop the max elevation
+
+            if len(good_neighbors_elev) > 0:
+                rel_max_elev = min(good_neighbors_elev) * R
+
+        return run_set
+
+        """
         if len(pixels) < 1: # if there aren't pixels in the run_set break recursion
             return run_set
 
         new_value = list(pixels)[0].value + 1 # determine the value that will be used to set the raster
 
-        # initialize the sets that will be added to
+
+        # initialize the sets to which we'll add
         good_neighbors = set()
         good_neighbors_elev = set() # this is for determining rel_max_elev
         
@@ -232,6 +260,7 @@ class DEM:
 
         # run recursion
         self.findRunSwath(good_neighbors, run_set, k, R, max_elev, rel_max_elev, MAX_ELEV_DROP_REDUCER, MAX_SLOPE, SLOPE_LIKE)
+        """
 
 
     '''
